@@ -1,0 +1,566 @@
+<title>Курьер на выбор</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Onest:wght@500;600;700&display=swap">
+<style>
+/* Layout: одна колонка документа (~68 знаков), оглавление в начале, таблицы — в собственных скролл-контейнерах */
+:root {
+  --bg: #FBFBFD;
+  --surface: #F0F2F8;
+  --fg: #171A21;
+  --muted: #5A6172;
+  --line: #DCE0EA;
+  --accent: #2B54DF;
+  --accent-soft: #E7ECFC;
+  --font-display: "Onest", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111319;
+    --surface: #1A1E27;
+    --fg: #E7E9F0;
+    --muted: #9BA2B4;
+    --line: #2A303C;
+    --accent: #84A0FF;
+    --accent-soft: #1E2744;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111319;
+  --surface: #1A1E27;
+  --fg: #E7E9F0;
+  --muted: #9BA2B4;
+  --line: #2A303C;
+  --accent: #84A0FF;
+  --accent-soft: #1E2744;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 56px 96px;
+  display: grid;
+  gap: 56px;
+}
+.page > * { min-width: 0; }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  text-wrap: balance;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+h1 { font-size: clamp(32px, 6vw, 46px); line-height: 1.08; font-weight: 700; }
+h2 { font-size: 26px; line-height: 1.2; font-weight: 600; }
+h3 { font-size: 19px; line-height: 1.3; font-weight: 600; }
+p, ul, ol { margin: 0; }
+ul, ol { padding-left: 1.25em; display: grid; gap: 6px; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+strong { font-weight: 600; }
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+
+/* Шапка */
+.head { display: grid; gap: 16px; }
+.lead { font-size: 19px; line-height: 1.5; color: var(--muted); max-width: 62ch; }
+
+/* Коротко — единственный выделенный блок */
+.summary {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 24px;
+  display: grid;
+  gap: 12px;
+}
+.summary ul { gap: 10px; }
+
+/* Оглавление */
+.toc { display: grid; gap: 10px; }
+.toc ol {
+  columns: 2 220px;
+  column-gap: 32px;
+  display: block;
+  padding-left: 1.4em;
+}
+.toc li { margin-bottom: 4px; break-inside: avoid; }
+
+/* Секции */
+section { display: grid; gap: 18px; scroll-margin-top: 24px; }
+.sec-head { display: grid; gap: 6px; }
+.prose { display: grid; gap: 14px; max-width: 68ch; }
+
+/* Нумерованные пункты с заголовком */
+.points { list-style: none; padding: 0; display: grid; gap: 18px; counter-reset: pt; }
+.points > li { display: grid; grid-template-columns: 28px 1fr; gap: 4px 12px; counter-increment: pt; }
+.points > li::before {
+  content: counter(pt);
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 17px;
+  line-height: 1.5;
+}
+.points > li > div { min-width: 0; display: grid; gap: 6px; }
+
+/* Флоу */
+.flow { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 6px; align-items: center; }
+.flow li { display: flex; align-items: center; gap: 6px; }
+.flow li span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 14px;
+  background: var(--bg);
+  white-space: nowrap;
+}
+.flow li.key span { border-color: var(--accent); background: var(--accent-soft); }
+.flow li:not(:last-child)::after { content: "→"; color: var(--muted); }
+
+/* Экраны */
+.screens { display: grid; gap: 36px; }
+.screen { display: grid; gap: 10px; padding-top: 20px; border-top: 1px solid var(--line); }
+.screen h3 { display: flex; gap: 10px; align-items: baseline; }
+.screen h3 .num { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; min-width: 1.6em; }
+.screen .goal { color: var(--muted); font-size: 15px; }
+.sub { font-weight: 600; margin-top: 6px; }
+
+/* Таблицы */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 520px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+td:first-child { font-weight: 500; white-space: nowrap; }
+.tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-left: 6px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+footer { font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 20px; }
+
+@media (max-width: 480px) {
+  .page { padding-block: 32px 64px; gap: 44px; }
+  .summary { padding: 18px; }
+  .lead { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+html { scroll-behavior: smooth; }
+</style>
+
+<main class="page">
+
+  <header class="head">
+    <div class="eyebrow">Тестовое задание · оформление заказа</div>
+    <h1>Курьер на выбор</h1>
+    <p class="lead">Интернет-магазин даёт выбрать, кто привезёт заказ: красивый курьер или умный. Клиенты чаще выбирают красивых, а бизнесу выгоднее отправлять умных. Ниже — решение и флоу оформления заказа по экранам.</p>
+  </header>
+
+  <aside class="summary" aria-labelledby="summary-title">
+    <div class="eyebrow" id="summary-title">Коротко</div>
+    <p>Клиенту от доставки нужно одно: получить заказ быстро, вовремя и целым. Выбор курьера — развлечение, а не потребность. Отсюда решение:</p>
+    <ul>
+      <li>Первый вариант и вариант по умолчанию — <strong>«Побыстрее»</strong>: приедет ближайший свободный курьер. Сюда бизнес назначает умных.</li>
+      <li><strong>«Красивый» и «Умный» — форматы доставки, а не типы людей.</strong> Красивый — про подачу, умный — про пользу. Пользу умного показываем под содержимое корзины.</li>
+      <li>Тот, кто выбрал «Побыстрее», в трекинге узнаёт, кто к нему едет. WOW остаётся и у него.</li>
+      <li>Без тёмных паттернов, фото курьеров и оценок внешности.</li>
+    </ul>
+  </aside>
+
+  <nav class="toc" aria-label="Содержание">
+    <div class="eyebrow">Содержание</div>
+    <ol>
+      <li><a href="#why">Почему выбирают красивых</a></li>
+      <li><a href="#business">Почему бизнесу нужны умные</a></li>
+      <li><a href="#concept">Решение</a></li>
+      <li><a href="#flow">Карта флоу</a></li>
+      <li><a href="#screens">Экраны</a></li>
+      <li><a href="#edge">Крайние случаи</a></li>
+      <li><a href="#courier">Сторона курьера</a></li>
+      <li><a href="#ethics">Что я сознательно не делаю</a></li>
+      <li><a href="#metrics">Метрики</a></li>
+      <li><a href="#tests">A/B-тесты</a></li>
+      <li><a href="#questions">Вопросы к бизнесу</a></li>
+    </ol>
+  </nav>
+
+  <section id="why">
+    <div class="sec-head">
+      <div class="eyebrow">Аналитика</div>
+      <h2>Почему клиенты выбирают красивых</h2>
+    </div>
+    <ol class="points">
+      <li><div>
+        <h3>Выбор был бесплатным</h3>
+        <p>В закрытом тесте выбор не стоил ни времени, ни денег, поэтому люди брали вариант повеселее. Когда у выбора появится цена — время, — большинство, скорее всего, выберет скорость. Это проверяем A/B-тестом.</p>
+      </div></li>
+      <li><div>
+        <h3>«Умный» автоматически читается как «некрасивый»</h3>
+        <p>Противопоставление «красивый или умный» отнимает одно качество, когда выбираешь другое. Потери при этом неравные. Некрасивость клиент увидит на пороге. Глупость при передаче коробки ничему не мешает.</p>
+        <p>Выбрать красивого ничего не стоит, а выбрать умного — значит согласиться на «некрасивого». Перекос в данных во многом создан самой формулировкой, а не реальным предпочтением.</p>
+      </div></li>
+      <li><div>
+        <h3>Польза умного не видна</h3>
+        <p>Человеку, который получает посылку, слово «умный» ничего не обещает. Пока не сказано, что именно курьер сделает, выбирать его незачем.</p>
+      </div></li>
+    </ol>
+    <p class="prose muted">Есть и этическая сторона: ярлык обижает обе группы курьеров и подталкивает нанимать людей по внешности.</p>
+  </section>
+
+  <section id="business">
+    <div class="sec-head">
+      <div class="eyebrow">Гипотезы</div>
+      <h2>Почему бизнесу выгоднее умные</h2>
+    </div>
+    <div class="prose">
+      <p>В брифе причина не названа. Мои гипотезы:</p>
+      <ul>
+        <li>проверяет товар при получении — меньше возвратов и споров;</li>
+        <li>ждёт примерку или настройку и сразу забирает то, что не подошло — нет второго выезда;</li>
+        <li>решает вопросы у двери — меньше обращений в поддержку;</li>
+        <li>может предложить услугу: установку, гарантию — без навязывания.</li>
+      </ul>
+      <p class="muted">Если причина другая, например умные дешевле или их больше, меняются рычаги, но флоу остаётся тем же.</p>
+    </div>
+  </section>
+
+  <section id="concept">
+    <div class="sec-head">
+      <div class="eyebrow">Концепция</div>
+      <h2>Решение</h2>
+    </div>
+    <ol class="points">
+      <li><div>
+        <h3>Скорость важнее всего</h3>
+        <p>Первая карточка и выбор по умолчанию — «Побыстрее». Это в интересах клиента, и туда же бизнес назначает умных курьеров.</p>
+      </div></li>
+      <li><div>
+        <h3>Формат, а не человек</h3>
+        <p><strong>Красивый</strong> — подача: стильная форма, подарочная упаковка, открытка. <strong>Умный</strong> — польза: проверка, настройка, примерка, возврат на месте. Любой курьер может работать в одном или обоих форматах — по своему выбору и после обучения.</p>
+      </div></li>
+      <li><div>
+        <h3>Польза под корзину</h3>
+        <p>В заказе ноутбук — на карточке «Умного» строка «включит и проверит при вас». Подарок — подсказка на «Красивом». Подсказки ничего не выбирают за клиента.</p>
+      </div></li>
+      <li><div>
+        <h3>Сюрприз в трекинге</h3>
+        <p>Тот, кто выбрал «Побыстрее», после назначения курьера видит: «Кто едет: умный курьер — может проверить заказ при вас».</p>
+      </div></li>
+      <li><div>
+        <h3>Честная цена выбора</h3>
+        <p>Ближайшее время и стоимость каждого варианта видны сразу на карточке, а не на последнем шаге.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section id="flow">
+    <div class="sec-head">
+      <div class="eyebrow">Флоу</div>
+      <h2>Карта флоу</h2>
+    </div>
+    <p class="sub">Основной путь</p>
+    <ol class="flow" aria-label="Основной путь">
+      <li><span>Карточка товара</span></li>
+      <li><span>Корзина</span></li>
+      <li><span>Вход</span></li>
+      <li class="key"><span>Оформление</span></li>
+      <li><span>Заказ оформлен</span></li>
+      <li class="key"><span>Трекинг</span></li>
+      <li><span>Курьер в пути</span></li>
+      <li class="key"><span>Вручение</span></li>
+      <li><span>Оценка</span></li>
+    </ol>
+    <p class="small muted">Выделены экраны, где живёт выбор курьера и его результат.</p>
+    <div class="prose">
+      <p><strong>Ветки:</strong> пункт выдачи, нет слотов в выбранном формате, смена формата, замена курьера сервисом, подарок, смешанная корзина, несколько отправлений, адрес вне зоны.</p>
+      <p><strong>Отдельно:</strong> флоу курьера.</p>
+    </div>
+  </section>
+
+  <section id="screens">
+    <div class="sec-head">
+      <div class="eyebrow">Экраны</div>
+      <h2>Экраны по порядку</h2>
+    </div>
+
+    <div class="screens">
+
+      <article class="screen">
+        <h3><span class="num">1</span>Карточка товара</h3>
+        <p class="goal">Показать WOW до корзины, но не мешать покупке.</p>
+        <ul>
+          <li>В блоке доставки строка «Курьер на выбор — при оформлении». По тапу открывается шит «Что входит» (экран 5).</li>
+          <li>У техники: «Умный курьер проверит при вас».</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">2</span>Корзина</h3>
+        <ul>
+          <li>Обычная корзина. Курьера здесь не выбираем: ещё неизвестны адрес и получатель.</li>
+          <li>Над кнопкой — тизер: «Курьера выберете при оформлении».</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">3</span>Вход для гостя</h3>
+        <ul>
+          <li>Телефон и код из SMS, ничего лишнего.</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">4</span>Оформление <span class="tag">ключевой экран</span></h3>
+        <p class="goal">Один экран, блоки сверху вниз. Всё, что влияет на варианты курьера, стоит выше блока курьера.</p>
+        <ol>
+          <li><strong>Способ получения:</strong> Курьер или Пункт выдачи.</li>
+          <li><strong>Адрес.</strong></li>
+          <li><strong>Получатель:</strong> Я или Другой человек. Переключатель «Это подарок» — в SMS получателю не будет цены и состава.</li>
+          <li><strong>Курьер</strong> — три карточки, в каждой ближайшее время (таблица ниже).</li>
+          <li><strong>Дата и время</strong> — слоты для выбранного варианта. Для «Умного» честная пометка: «у двери — до 15 минут на проверку».</li>
+          <li><strong>Оплата.</strong></li>
+          <li><strong>Итог:</strong> товары, доставка, вариант курьера, цена.</li>
+          <li>Кнопка <strong>«Оформить заказ»</strong>.</li>
+        </ol>
+
+        <p class="sub">Карточки курьера</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Карточка</th><th>Подпись</th><th>Пример времени</th></tr></thead>
+            <tbody>
+              <tr><td>Побыстрее <span class="tag">по умолчанию</span></td><td>Ближайший свободный курьер</td><td>сегодня 18:00–20:00</td></tr>
+              <tr><td>Красивый</td><td>Стильная форма, подарочная упаковка, вручит с открыткой</td><td>завтра 12:00–14:00</td></tr>
+              <tr><td>Умный</td><td>Проверит товар при вас, поможет включить, сразу заберёт, если не подошло</td><td>сегодня 20:00–22:00</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="sub">Подсказки по корзине</p>
+        <p>Строка на подходящей карточке, без предвыбора. Подарок важнее категории: это явное желание клиента.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>В корзине</th><th>Карточка</th><th>Подсказка</th></tr></thead>
+            <tbody>
+              <tr><td>Техника</td><td>Умный</td><td>«В заказе ноутбук — курьер включит и проверит его при вас»</td></tr>
+              <tr><td>Одежда, обувь</td><td>Умный</td><td>«Дождётся примерки и заберёт то, что не подошло»</td></tr>
+              <tr><td>Хрупкое</td><td>Умный</td><td>«Вскроет и проверит целостность»</td></tr>
+              <tr><td>Мебель, крупное</td><td>Умный</td><td>«Занесёт и подскажет по сборке»</td></tr>
+              <tr><td>Подарок</td><td>Красивый</td><td>«Вручит как подарок»</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="sub">Правила блока</p>
+        <ul>
+          <li>Переключение в один тап, без «вы уверены?».</li>
+          <li>Ссылка «Что входит» открывает шит (экран 5).</li>
+          <li>Иллюстрация: один и тот же персонаж в двух образах или иконки без людей.</li>
+          <li>Если формат платный, цена видна на самой карточке.</li>
+        </ul>
+
+        <p class="sub">Состояния блока</p>
+        <ul>
+          <li>По умолчанию выбран «Побыстрее».</li>
+          <li>Формат недоступен на дату — карточка неактивна, с причиной и действием: «На завтра нет слотов — ближайший 28 ноября».</li>
+          <li>Выбран пункт выдачи — блок скрыт, в способе получения подсказка «Выбор курьера — при курьерской доставке».</li>
+          <li>Адрес вне зоны — «В вашем районе пока обычная доставка».</li>
+          <li>Слоты загружаются — скелетон.</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">5</span>Шит «Что входит»</h3>
+        <ul>
+          <li><strong>Побыстрее:</strong> приедет ближайший свободный курьер. Какой — увидите в трекинге.</li>
+          <li><strong>Красивый:</strong> форма, упаковка, открытка. Проверку и настройку не делает.</li>
+          <li><strong>Умный:</strong> проверка, включение, примерка, возврат на месте. Подарочную подачу не делает.</li>
+          <li><strong>Как мы подбираем курьеров:</strong> формат — это роль, а не внешность. Курьеры сами выбирают, в каком формате работать, и проходят обучение. Мы не показываем фото и не даём выбирать курьера по полу или внешности.</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">6</span>Заказ оформлен</h3>
+        <ul>
+          <li>Номер, дата и время, вариант курьера.</li>
+          <li>«Что подготовить»: для умного — «Освободите 10–15 минут: курьер проверит заказ при вас»; для подарка — «Получателю придёт SMS без цены и состава».</li>
+          <li>«Изменить курьера можно до [время]».</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">7</span>Детали заказа и трекинг <span class="tag">сюрприз</span></h3>
+        <ul>
+          <li>Статусы: оформлен → собран → передан курьеру → в пути → вручён.</li>
+          <li>Вариант курьера и кнопка «Изменить» — активна до передачи курьеру.</li>
+          <li><strong>Для «Побыстрее»</strong> после назначения: «Кто едет: умный курьер — может проверить заказ при вас».</li>
+          <li>Курьер: только имя и код получения, без фото. Фото снова превращает выбор в оценку внешности, а код решает задачу безопасности.</li>
+          <li>Связь: чат и звонок через подменный номер.</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">8</span>Смена варианта</h3>
+        <ul>
+          <li>Шит с тремя вариантами, текущий отмечен. Если новый недоступен на эту дату — сразу предлагаем ближайший слот.</li>
+          <li>После передачи курьеру смена недоступна, с объяснением почему.</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">9</span>Курьер в пути</h3>
+        <ul>
+          <li>Пуш: «Курьер будет через 20 минут».</li>
+          <li>Карта, время прибытия, чат.</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">10</span>Вручение</h3>
+        <ul>
+          <li><strong>Умный:</strong> чек-лист «Что сделал курьер» — проверил комплектность, включил. Кнопки «Всё в порядке — принять» и «Вернуть товар»: частичный отказ прямо у двери.</li>
+          <li><strong>Красивый:</strong> «Заказ вручён».</li>
+          <li>Везде — подтверждение кодом получения.</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">11</span>Оценка</h3>
+        <ul>
+          <li>«Как прошла доставка?» — от 1 до 5.</li>
+          <li>Теги по формату. Умный: «помог разобраться», «всё проверил», «объяснил понятно». Красивый: «красивая подача», «аккуратная упаковка». Общие: «вовремя», «вежливо».</li>
+          <li><strong>Никаких оценок внешности.</strong></li>
+          <li>«Пожаловаться» — на поведение. Курьер тоже может оценить клиента и пожаловаться.</li>
+        </ul>
+      </article>
+
+      <article class="screen">
+        <h3><span class="num">12</span>Повторный заказ</h3>
+        <ul>
+          <li>По умолчанию снова «Побыстрее». Если в прошлый раз клиент осознанно выбрал формат — запоминаем его выбор.</li>
+        </ul>
+      </article>
+
+    </div>
+  </section>
+
+  <section id="edge">
+    <div class="sec-head">
+      <div class="eyebrow">Ветки</div>
+      <h2>Крайние случаи</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Случай</th><th>Что делаем</th></tr></thead>
+        <tbody>
+          <tr><td>Пункт выдачи или постамат</td><td>Блок курьера скрыт</td></tr>
+          <tr><td>Нет слотов в формате</td><td>Неактивная карточка и ближайшая дата; переход к другому варианту в один тап</td></tr>
+          <tr><td>Сервис меняет курьера</td><td>Пуш с выбором: другой формат в то же время или перенос. Если формат был платным — возвращаем деньги</td></tr>
+          <tr><td>Подарок другому человеку</td><td>Подсказка на «Красивом»; умный проверяет заказ вместе с получателем; SMS без цены</td></tr>
+          <tr><td>Смешанная корзина</td><td>Подарок важнее категории; подсказка на «Умном» остаётся, но без акцента</td></tr>
+          <tr><td>Несколько отправлений</td><td>Один выбор на весь заказ, применяется к каждому отправлению</td></tr>
+          <tr><td>Адрес вне зоны</td><td>Обычная доставка и честная строка вместо блока</td></tr>
+          <tr><td>Отмена заказа</td><td>Стандартный сценарий</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="courier">
+    <div class="sec-head">
+      <div class="eyebrow">Вторая сторона</div>
+      <h2>Сторона курьера</h2>
+    </div>
+    <ul class="prose">
+      <li><strong>Онбординг:</strong> курьер сам выбирает форматы, один или оба, и проходит обучение — подаче или проверке техники.</li>
+      <li><strong>Задание:</strong> видит формат и чек-лист по заказу — что проверить, нужна ли упаковка.</li>
+      <li><strong>У двери:</strong> чек-лист, отметки, частичный возврат в приложении.</li>
+      <li><strong>Безопасность:</strong> подменный номер, кнопка помощи, жалоба на клиента, право отказаться от заказа при угрозе.</li>
+      <li><strong>Рейтинг</strong> — за выполнение формата, не за внешность.</li>
+    </ul>
+  </section>
+
+  <section id="ethics">
+    <div class="sec-head">
+      <div class="eyebrow">Границы</div>
+      <h2>Что я сознательно не делаю</h2>
+    </div>
+    <ul class="prose">
+      <li>Фото курьеров при выборе, выбор по полу и внешности, оценку внешности.</li>
+      <li>«Вы уверены?», стыжение, ложный дефицит, тихий предвыбор.</li>
+      <li>Слово «некрасивый» и сравнения курьеров между собой.</li>
+    </ul>
+    <p class="prose muted">Такие приёмы быстро поднимут долю умных, но сделают выбор фиктивным. Тогда WOW-функция превращается в обман, а метрика растёт за счёт доверия к магазину.</p>
+  </section>
+
+  <section id="metrics">
+    <div class="sec-head">
+      <div class="eyebrow">Как поймём, что работает</div>
+      <h2>Метрики</h2>
+    </div>
+    <ul class="prose">
+      <li>Доля заказов, доставленных умными курьерами — цель бизнеса.</li>
+      <li>Доля «Побыстрее» среди всех выборов.</li>
+      <li>Конверсия оформления — не должна упасть.</li>
+      <li>Возвраты и повторные выезды в разрезе категория × формат.</li>
+      <li>Оценка доставки по форматам.</li>
+      <li>Жалобы клиентов и курьеров.</li>
+      <li>Время у двери.</li>
+    </ul>
+  </section>
+
+  <section id="tests">
+    <div class="sec-head">
+      <div class="eyebrow">Проверить</div>
+      <h2>A/B-тесты</h2>
+    </div>
+    <ul class="prose">
+      <li>«Побыстрее» первым и по умолчанию против варианта без предвыбора.</li>
+      <li>Три равные карточки против времени на первом плане и свёрнутого пункта «Выбрать курьера».</li>
+      <li>Платный «Красивый» с упаковкой против бесплатного.</li>
+    </ul>
+  </section>
+
+  <section id="questions">
+    <div class="sec-head">
+      <div class="eyebrow">Уточнить</div>
+      <h2>Вопросы к бизнесу</h2>
+    </div>
+    <ul class="prose">
+      <li>Почему умные выгоднее? От ответа зависят рычаги — см. гипотезы выше.</li>
+      <li>Сколько курьеров и в каких форматах готовы работать?</li>
+      <li>Форматы платные или бесплатные?</li>
+      <li>В каких зонах доступен выбор?</li>
+    </ul>
+  </section>
+
+  <footer>Компания, ситуация и персонажи вымышлены по условиям задания.</footer>
+
+</main>
